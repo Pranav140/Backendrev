@@ -1,5 +1,5 @@
+// ...existing code...
 import { v2 as cloudinary } from "cloudinary"
-import { response } from "express";
 import fs from "fs"
 
 cloudinary.config({
@@ -11,21 +11,19 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null
-        
-        // upload on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        
-        // file uploaded successfully
+        if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+            console.error("Cloudinary keys missing in env")
+            return null
+        }
+        const response = await cloudinary.uploader.upload(localFilePath, { resource_type: "auto" })
         console.log("File uploaded on cloudinary", response.url);
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file
+        fs.unlinkSync(localFilePath)
         return response;
-        
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove locally saved temporary file as upload failed
+        if (localFilePath && fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath)
         return null;
     }
 }
 
 export { uploadOnCloudinary }
+// ...existing code...
